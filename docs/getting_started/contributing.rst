@@ -8,25 +8,66 @@ The "First 24 Hours" Guide
 
 If you are a new member, follow these steps to get your environment ready:
 
-1. **Install Prerequisites**: Ensure you have Python 3.10+ installed.
+1. **Install Prerequisites**:
+   * **Python 3.10+**: Ensure Python is installed and added to your system's PATH.
+   * **Git**: Install Git to clone the repository and manage version control.
+
 2. **Clone the Repository**:
+   Open your terminal (Command Prompt or PowerShell on Windows) and run:
+
    .. code-block:: bash
 
-      git clone https://github.com/qset/qset_doc.git
-      cd qset_doc
+      git clone https://github.com/QSET-Sat-Launch-1/qset-doc.git
+      cd qset-doc
 
-3. **Install Dependencies**:
+3. **Set Up a Virtual Environment (Recommended)**:
+   Creating a virtual environment keeps your project dependencies isolated.
+
+   .. tab-set::
+
+      .. tab-item:: Windows
+
+         .. code-block:: powershell
+
+            python -m venv .venv
+            .venv\Scripts\activate
+
+      .. tab-item:: macOS / Linux
+
+         .. code-block:: bash
+
+            python3 -m venv .venv
+            source .venv/bin/activate
+
+4. **Install Dependencies**:
+   With your virtual environment active, install the required packages:
+
    .. code-block:: bash
 
       pip install -r requirements.txt
 
-4. **Build the Documentation**:
-   .. code-block:: bash
+5. **Build and Preview the Documentation**:
+   Build the files to HTML and preview them in your browser.
 
-      # On Windows
-      .\make.bat serve
+   .. tab-set::
 
-   This will build the HTML files and open them in your web browser. Whenever you make a change, re-run this command to see your updates.
+      .. tab-item:: Windows
+
+         .. code-block:: powershell
+
+            .\make.bat serve
+
+         *(This builds the site and automatically opens it in your default browser. To view future changes, run this command again.)*
+
+      .. tab-item:: macOS / Linux
+
+         .. code-block:: bash
+
+            sphinx-build -b html docs docs/_build/html
+            open docs/_build/html/index.html
+
+         *(If you are on Linux and ``open`` is not available, use ``xdg-open docs/_build/html/index.html``.)*
+
 
 Using the Documentation Tools
 -----------------------------
@@ -86,7 +127,48 @@ To add documentation for a new project/subsystem:
 Docs-as-Code Workflow
 ---------------------
 
-1. Create a new branch for your documentation updates.
-2. Write your content using reStructuredText (``.rst``) or MyST Markdown (``.md``).
-3. Run ``make html`` to verify there are no build errors or broken links.
-4. Submit a Pull Request to the ``main`` branch. Our CI/CD pipeline will automatically build and deploy your changes to GitHub Pages once approved.
+To make changes and push them to the team repository, follow this step-by-step workflow:
+
+1. **Pull the Latest Changes**:
+   Always make sure you start with the newest version of the codebase.
+
+   .. code-block:: bash
+
+      git checkout main
+      git pull origin main
+
+2. **Create a New Branch**:
+   Never make edits directly on ``main``. Create a descriptive branch for your work (e.g., ``feat-obc-telemetry`` or ``docs-adcs-sensors``).
+
+   .. code-block:: bash
+
+      git checkout -b your-branch-name
+
+3. **Edit and Preview**:
+   * Open the workspace folder in your text editor (like VS Code).
+   * Edit existing files or create new ones under the appropriate subteam folder.
+   * Re-build and preview your changes locally to verify there are no formatting or build errors:
+
+     * **Windows**: ``.\make.bat serve``
+     * **macOS/Linux**: ``sphinx-build -b html docs docs/_build/html && open docs/_build/html/index.html``
+
+
+4. **Commit Your Changes**:
+   Stage and commit your edits.
+
+   .. code-block:: bash
+
+      git add .
+      git commit -m "Briefly describe your documentation changes"
+
+5. **Push and Open a Pull Request**:
+   Push your new branch to GitHub and request feedback.
+
+   .. code-block:: bash
+
+      git push origin your-branch-name
+
+   Go to the `qset-doc GitHub repository <https://github.com/QSET-Sat-Launch-1/qset-doc>`_ in your browser. You will see a prompt to **Compare & pull request**. Click it, write a short description of what you added/modified, and submit it!
+   
+   Once approved and merged by a subteam lead, our GitHub Actions pipeline will automatically build and deploy your updates to the live site.
+
