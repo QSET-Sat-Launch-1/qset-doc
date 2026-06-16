@@ -76,80 +76,95 @@ For more detail, see the `Wikipedia article on MPPT
 Scope & Assumptions
 --------------------
 
-What this document covers and explicitly does *not* cover. List any
-assumptions the design depends on (e.g. "assumes 3.3V regulated bus
-supply provided by EPS") so readers from other subteams know what to
-verify before relying on this page.
+This will cover as much as I can on the topic of this PCB, but assumes all other PCBs adhere to the standards set, and will take these notes into account to integrate well with one another.
 
 System Architecture
 --------------------
 
-Use a Mermaid diagram to show components, data/signal flow, hardware
-interfaces, or a state machine. Every project page should have at
-least one diagram, even a simple block diagram.
-
+Here is a flow chart which captures the main logic of the PCB:
 .. mermaid::
 
+   %%{init: {
+   'theme': 'neutral',
+   'themeVariables': {
+   'background': '#ffffff',
+   'primaryColor': '#ffffff'
+   }
+   }}%%
    graph TD
-    %% Nodes Definitions
-    Solar[Solar Array]
-    MPPT["4 x MPPT (Buck Converter)"]
-    Batteries[Batteries]
-    PowerLines[Battery Board]
-    
-    BuckSolar["Local Buck Converter<br>(3.3V)"]
-    IdealDiode[Ideal Diode]
-    BuckExt1["Back to this board <br> 3V3 External Buck"]
-    BuckExt2["Back to this board <br> 5V External Buck"]
+   %% Nodes Definitions
+   Solar[Solar Array]
+   MPPT["4 x MPPT Converter"]
+   Batteries[Batteries]
+   PowerLines[Battery Board]
 
-    
-    STM32[STM32]
-    Watchdog[Watchdog]
+   BuckSolar["Local Buck Converter<br>(3.3V)"]
+   IdealDiode[Ideal Diode]
+   BuckExt1["Back to this board<br>3V3 External Buck"]
+   BuckExt2["Back to this board<br>5V External Buck"]
 
-    OBC[OBC]
-    OBC_TEL[OBC Current 3V3]
+   STM32[STM32 Microcontroller]
+   Watchdog[External Watchdog]
+   I_V_IN[I_IN, V_IN Telemetry]
+   OBC[OBC]
+   OBC_TEL[OBC Current Sense 3V3]
+   ADCS[ADCS]
+   ADCS_TEL1[ADCS Current Sense 3V3]
+   ADCS_TEL2[ADCS Current Sense 5V]
 
-    ADCS[ADCS]
-    ADCS_TEL1[ADCS Current 3V3]
-    ADCS_TEL2[ADCS Current 5V]
+   %% Main Power Path (Soft Rust/Coral)
+   Solar --> MPPT
+   MPPT --> Batteries
+   Batteries --> PowerLines
+   Batteries --> IdealDiode
+   Solar --> IdealDiode
+   IdealDiode --> BuckSolar
+   PowerLines --> BuckExt1
+   PowerLines --> BuckExt2
 
+   linkStyle 0,1,2,3,4,5,6,7 stroke:#d98a6c,stroke-width:2.5px;
 
- 
+   %% Control & Housekeeping (Muted Slate Blue)
+   Watchdog --> STM32
+   Solar -.-> I_V_IN
+   I_V_IN --> STM32
+   BuckSolar --> STM32
+   BuckSolar --> Watchdog
 
-    %% Labels/Buses (represented as standard or shaped nodes for clarity)
+   linkStyle 8,9,10,11,12 stroke:#5b7085,stroke-width:2px;
 
-    %% Main Power Path (Top)
-    Solar --> MPPT
-    MPPT --> Batteries
-    Batteries --> PowerLines
+   %% Subsystem Delivery & Telemetry (Soft Mauve/Rose)
+   BuckExt1 --> OBC_TEL
+   BuckExt1 --> ADCS_TEL1
+   BuckExt2 --> ADCS_TEL2
+   OBC_TEL --> OBC
+   ADCS_TEL1 --> ADCS
+   ADCS_TEL2 --> ADCS
 
-    %% Measurement / Feedback Inputs to STM32
-    %% STM32 Control Loop
-    Watchdog --> STM32
+   linkStyle 13,14,15,16,17,18 stroke:#a67585,stroke-width:2px;
 
-    %% Power Supply to STM32 (Bottom)
-    
-    Batteries --> IdealDiode
-    Solar --> IdealDiode
-    IdealDiode --> BuckSolar
-    BuckSolar --> STM32
-    BuckSolar --> Watchdog
+   %% Force Legend to the Bottom using Invisible Links
+   OBC ~~~ L1
+   ADCS ~~~ L5
 
+   %% Diagram Legend Box
+   subgraph Legend ["— DIAGRAM LEGEND —"]
+      direction LR
+      L1[Primary Power Path] -->| | L2[ ]
+      L3[Control & Housekeeping] -->| | L4[ ]
+      L5[Subsystem Delivery / Tel] -->| | L6[ ]
+   end
 
-    PowerLines --> BuckExt1
-    PowerLines --> BuckExt2
-    BuckExt1 --> OBC_TEL
-    BuckExt1 --> ADCS_TEL1
-    
-    BuckExt2 --> ADCS_TEL2
-    
-    
-    OBC_TEL --> OBC
-    ADCS_TEL1 -->ADCS
-    ADCS_TEL2 -->ADCS
+   %% Style Legend Nodes to hide the dummy targets
+   style L2 width:0px,height:0px,fill:#fff,stroke:#fff;
+   style L4 width:0px,height:0px,fill:#fff,stroke:#fff;
+   style L6 width:0px,height:0px,fill:#fff,stroke:#fff;
+   style Legend fill:#fafafa,stroke:#ddd,stroke-width:1px;
 
-    Solar -.-> I_V_IN
-    I_V_IN --> STM32
+   %% Apply colors to legend lines
+   linkStyle 21 stroke:#d98a6c,stroke-width:2.5px;
+   linkStyle 22 stroke:#5b7085,stroke-width:2px;
+   linkStyle 23 stroke:#a67585,stroke-width:2px;
 
 
 
@@ -158,9 +173,8 @@ least one diagram, even a simple block diagram.
 Interfaces
 ----------
 
-Explicit list of every boundary this component crosses. This is the
-section other subteams will read first — be precise about connectors,
-protocols, voltages, data rates, and units.
+Here is an explicit list of every boundary this PCB will cross. This is the
+main section for other subteams. It will allow you to know how this board will interface, if it is treated as a black box with inputs and outputs.
 
 .. list-table::
    :header-rows: 1
@@ -169,14 +183,36 @@ protocols, voltages, data rates, and units.
      - Connects To
      - Type
      - Notes
-   * - [e.g. Power input]
-     - [EPS — 3.3V rail]
+   * - Power input
+     - EPS — 7.2V main batteryrail
      - Electrical
-     - [Max current draw, connector part number]
-   * - [e.g. Telemetry packet]
-     - [OBC — UART]
+     - :yellow-bg:`Still need to decide on current limits and conection` 
+   * - CAN BUS x2 
+     - OBC — CAN
      - Data
-     - [Baud rate, packet format reference]
+     - Parralell CAN lines for main communication
+   * - Solar Input — ~ 5-20V
+     - Solar Board
+     - Power
+     - Using Harwin Datamate J-Tek series right-angle versions for Connector
+   * - ADCS Out x2
+     - ADCS — 3V3, 5V
+     - Power
+     - Gives 3V3 and 5V lines to the board
+   * - OBC Out 
+     - OBC — 3V3
+     - Power
+     - Gives power to OBC
+   * - Shutdown Power lines x2
+     - OBC
+     - GPIO 
+     - Can control when ADCS gets power (along with maybe itself?)
+   * - EPS Thermisters x4
+     - EPS Battery Board
+     - Analog 
+     - :yellow-bg:`Still need to decide connector, to be placed next to battery`
+
+
 
 Hardware Detail
 ----------------
