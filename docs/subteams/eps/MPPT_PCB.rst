@@ -82,6 +82,7 @@ System Architecture
 --------------------
 
 Here is a flow chart which captures the main logic of the PCB:
+
 .. mermaid::
 
    %%{init: {
@@ -167,14 +168,14 @@ Here is a flow chart which captures the main logic of the PCB:
    linkStyle 23 stroke:#a67585,stroke-width:2px;
 
 
-
-
-
 Interfaces
 ----------
 
 Here is an explicit list of every boundary this PCB will cross. This is the
 main section for other subteams. It will allow you to know how this board will interface, if it is treated as a black box with inputs and outputs.
+
+.. role:: raw-html(raw)
+   :format: html
 
 .. list-table::
    :header-rows: 1
@@ -186,7 +187,7 @@ main section for other subteams. It will allow you to know how this board will i
    * - Power input
      - EPS — 7.2V main batteryrail
      - Electrical
-     - :yellow-bg:`Still need to decide on current limits and conection` 
+     - :raw-html:`<span style="background-color: #ffff00;">Still need to decide on current limits and conection</span>`
    * - CAN BUS x2 
      - OBC — CAN
      - Data
@@ -210,9 +211,7 @@ main section for other subteams. It will allow you to know how this board will i
    * - EPS Thermisters x4
      - EPS Battery Board
      - Analog 
-     - :yellow-bg:`Still need to decide connector, to be placed next to battery`
-
-
+     - :raw-html:`<span style="background-color: #ffff00;">Still need to decide connector, to be placed next to battery</span>`
 
 Hardware Detail
 ----------------
