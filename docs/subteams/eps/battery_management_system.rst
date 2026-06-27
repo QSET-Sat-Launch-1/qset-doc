@@ -780,10 +780,7 @@ Component Change Log
    * - No series cell balancing IC
      - BQ28Z610 (integrated passive balancing)
      - Prevents individual cell overcharge; extends pack lifespan.
-   * - No external cell balancing schematic
-     - ``External_Cell_Balancing.sch``
-     - Higher balancing currents needed for 4-cell parallel banks than integrated resistors
-       can supply.
+
 
 ----
 
